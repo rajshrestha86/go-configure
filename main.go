@@ -23,8 +23,6 @@ func main() {
 	var args []string
 	// Infinite loop get command and process it.
 
-
-
 	for {
 		proc := cli.Command{}
 		reader = bufio.NewReader(os.Stdin)
@@ -53,6 +51,7 @@ func main() {
 			args = in[1:]
 		}
 
+		// If the input command is a system command then it will be processed accordingly.
 		sys_cmd := cli.Is_Sys_Command(in[0])
 		if sys_cmd {
 			fmt.Println("This is a system command.", len(args))
@@ -73,6 +72,7 @@ func main() {
 		cmds = append(cmds, proc)
 	}
 
+	// Gets the input and output for the given process.
 	for _, each := range cmds {
 		fmt.Println("Process: ", string(each.Cmd))
 		fmt.Println("Inputs: ")
@@ -92,7 +92,6 @@ func scan_output(output *[]byte, proc *cli.Command) {
 	scan_position := 0
 	for output_scanner.Scan() {
 		scan_position += 1
-		//fmt.Println("Here: ", scan_position)
 		txt := output_scanner.Text()
 		proc.Outputs = append(proc.Outputs, txt)
 		fmt.Println(txt)
