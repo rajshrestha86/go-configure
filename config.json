@@ -46,7 +46,7 @@
         "type": "string"
       }
     ],
-    "rules": ["NumDir > 0"]
+    "rules": ["NumDir > 0 && Name == 'proc'"]
   },
 
   {

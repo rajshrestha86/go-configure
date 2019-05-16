@@ -13,8 +13,6 @@ import (
 
 func main() {
 
-
-
 	var cmds []cli.Command
 	var reader *bufio.Reader
 	var dir string
@@ -52,10 +50,10 @@ func main() {
 		}
 
 		// If the input command is a system command then it will be processed accordingly.
-		sys_cmd := cli.Is_Sys_Command(in[0])
+		sys_cmd := cli.IsSysCommand(in[0])
 		if sys_cmd {
 			fmt.Println("This is a system command.", len(args))
-			cli.Execute_command(in[0], args)
+			cli.ExecuteCommand(in[0], args)
 			continue
 		} else if in[0] == "exit" || in[0] == "killed" {
 			break
