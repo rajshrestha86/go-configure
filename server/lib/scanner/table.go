@@ -2,19 +2,18 @@ package scanner
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
-	"rara/server/lib"
+	"rara/server/lib/db"
 	"rara/server/lib/parser"
-	"strconv"
 )
 
-func ParseTableOutput(flag chan bool, config map[string]interface{}, stdout *io.Reader, slave map[string]string, db *lib.DB) {
-	parser.InitializeTextOutput()
+func ParseTableOutput(completeFlag chan bool, config map[string]interface{}, stdout *io.Reader, slave map[string]string, db *db.DB) {
 	var err error
 	var commandInfo = make(map[string]interface{})
 	var identifier = slave["username"]+"@"+slave["host"]
+	var timestamp = slave["timestamp"]
+	var configName = slave["configName"]
 	commandInfo["name"] = config["name"].(string)
 	tableConfig := config["table_restruct"]
 
@@ -25,7 +24,6 @@ func ParseTableOutput(flag chan bool, config map[string]interface{}, stdout *io.
 	// Some table may have unstructured row. We should ignore those.
 	ignore := config["ignore"]
 	var checkIgnored = func(s []interface{}, e int) bool {
-
 		for _, a := range s {
 			if a == float64(e) {
 				return true
@@ -35,55 +33,56 @@ func ParseTableOutput(flag chan bool, config map[string]interface{}, stdout *io.
 	}
 
 	var scanPosition  = 0
-	var counter = 0
 	var outputChannel = make(chan []byte)
-	var rawCombinedOutput []string
+	var deserializedCmdMeta map[string]interface{}
 
+	// Scanning Output is a blocking Job, instead we run it on separate goroutine and communicate
+	// using channel.
 	go scanOutput(outputChannel, *stdout)
 
-	commandInfo["output"] = config["output"]
-	commandInfo["no_of_outputs"] = counter
+	commandInfo["outputType"] = config["output"]
 	commandInfo["rules"] = config["rules"]
-	commandInfo["raw_output"] = rawCombinedOutput
+	commandInfo["raw_output"] = []string{}
+	commandInfo["matched_output"] = []string{}
+	commandInfo["error_log"] = []string{}
 	commandInfoBytes, _ := json.Marshal(commandInfo)
 
-	err = db.Write(identifier+"_"+commandInfo["name"].(string), commandInfoBytes)
+	DbKey := identifier+":"+configName+":"+commandInfo["name"].(string)+":"+timestamp
+	err = db.Write(DbKey, commandInfoBytes)
 	if err != nil {
-		log.Fatal("Error writing to data.")
-		panic(err)
+		log.Println("Error writing to data: ", err)
 	}
-	var deserializedCmdMeta map[string]interface{}
+
 	for row := range outputChannel {
 		scanPosition += 1
-		if checkIgnored(ignore.([]interface{}), scanPosition) {
-			continue;
+		if ignore !=nil{
+			if checkIgnored(ignore.([]interface{}), scanPosition) {
+				continue
+			}
 		}
 		rawOutput := string(row)
-		rawCombinedOutput = append(rawCombinedOutput, rawOutput)
 		rowParser.Populate(&rawOutput)
-		counter += 1
-		key := identifier + "_" + commandInfo["name"].(string) + "_" + strconv.Itoa(counter)
-		err = db.Write(key, rowParser.To_json())
+
+		cmdMeta, err := db.Read(DbKey)
 		if err != nil {
-			fmt.Println("Could not write to Badger.")
-			panic(err)
-		}
-		cmdMeta, err := db.Read(identifier + "_" + commandInfo["name"].(string))
-		if err != nil {
-			log.Fatal("Error Reading  data.")
-			panic(err)
+			log.Println("Error Reading Data: ", err)
 		}
 		_ = json.Unmarshal([]byte(cmdMeta), &deserializedCmdMeta)
 
-		deserializedCmdMeta["no_of_outputs"] = counter
-		deserializedCmdMeta["raw_output"] = rawCombinedOutput
-		commandInfoBytes, _ = json.Marshal(deserializedCmdMeta)
-		err = db.Write(identifier+"_"+commandInfo["name"].(string), commandInfoBytes)
+		deserializedCmdMeta["raw_output"] = append(deserializedCmdMeta["raw_output"].([]interface{}), rawOutput)
+		ruleMatched, err := rowParser.EvaluateExpressions(commandInfo["rules"].(string))
 		if err != nil {
-			fmt.Println("There is error.")
-			panic(err)
+			deserializedCmdMeta["error_log"] = append(deserializedCmdMeta["error_log"].([]interface{}), err.Error())
+		} else {
+			if ruleMatched {
+				deserializedCmdMeta["matched_output"] = append(deserializedCmdMeta["matched_output"].([]interface{}), string(rowParser.To_json()))
+			}
 		}
-
+		commandInfoBytes, _ = json.Marshal(deserializedCmdMeta)
+		err = db.Write(DbKey, commandInfoBytes)
+		if err != nil {
+			log.Println("Error writing to data: ", err)
+		}
 	}
-	flag <- true
+	completeFlag <- true
 }

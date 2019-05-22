@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Command_1",
+    "command": "ls -la /tmp",
+    "output" : "table",
+    "table_restruct": [
+      {
+        "field_name": "Permision",
+        "regex": "(\\w*-*)*",
+        "type": "string"
+      },
+      {
+        "field_name": "NumDir",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Owner",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "User",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "Size",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Date",
+        "regex": "(\\w*\\s*\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "LastUpdate",
+        "regex": "(\\d+:?\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "Name",
+        "regex": "\\S*",
+        "type": "string"
+      }
+    ],
+    "rules": "Size > 0"
+  },
+
+  {
+    "name": "Command_2",
+    "command": "echo I am raj and i have logged in. Anish logged in. Prasid logged in. Enish did not log in.",
+    "output": "text",
+    "rules": ["\\w+\\s*logged in"]
+  },
+
+  {
+    "name": "Command_3",
+    "command": "ls -la /bin",
+    "output" : "table",
+    "ignore": [1],
+    "table_restruct": [
+      {
+        "field_name": "Permision",
+        "regex": "(\\w*-*)*",
+        "type": "string"
+      },
+      {
+        "field_name": "NumDir",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Owner",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "User",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "Size",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Date",
+        "regex": "(\\w*\\s*\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "LastUpdate",
+        "regex": "(\\d+:?\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "Name",
+        "regex": "\\S*",
+        "type": "string"
+      }
+    ],
+    "rules": "NumDir > 1"
+  }
+]

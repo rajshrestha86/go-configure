@@ -1,0 +1,108 @@
+[
+  {
+    "name": "Command_1",
+    "command": "ls -la /",
+    "output" : "table",
+    "ignore": [1],
+    "table_restruct": [
+      {
+        "field_name": "Permision",
+        "regex": "(\\w*-*)*",
+        "type": "string"
+      },
+      {
+        "field_name": "NumDir",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Owner",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "User",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "Size",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Date",
+        "regex": "(\\w*\\s*\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "LastUpdate",
+        "regex": "(\\d+:?\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "Name",
+        "regex": "\\S*",
+        "type": "string"
+      }
+    ],
+    "rules": ["NumDir > 0 && Name == 'proc'"]
+  },
+
+  {
+    "name": "Command_2",
+    "command": "tail -f /var/log/postgresql/postgresql-10-main.log",
+    "output": "text",
+    "rules": ["\\w+\\s*logged in"]
+  },
+
+  {
+    "name": "Command_3",
+    "command": "ls -la /var",
+    "output" : "table",
+    "ignore": [1],
+    "table_restruct": [
+      {
+        "field_name": "Permision",
+        "regex": "(\\w*-*)*",
+        "type": "string"
+      },
+      {
+        "field_name": "NumDir",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Owner",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "User",
+        "regex": "\\w+",
+        "type": "string"
+      },
+      {
+        "field_name": "Size",
+        "regex": "\\d+",
+        "type": "int"
+      },
+      {
+        "field_name": "Date",
+        "regex": "(\\w*\\s*\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "LastUpdate",
+        "regex": "(\\d+:?\\d+)",
+        "type": "string"
+      },
+      {
+        "field_name": "Name",
+        "regex": "\\S*",
+        "type": "string"
+      }
+    ],
+    "rules": ["NumDir > 0"]
+  }
+]

@@ -4,8 +4,9 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	main2 "rara/client"
+	pb "rara/client/grpc/proto"
 	"rara/server/lib"
+	badger "rara/server/lib/db"
 )
 
 const (
@@ -19,15 +20,15 @@ func main() {
 		log.Fatal("failed to listen : ", err)
 	}
 
-	db := lib.NewBadgerDB("/tmp/badger/")
+	db := badger.NewBadgerDB("/tmp/badger/")
 	defer db.Close()
 
-	serv := lib.Server{Db: &db}
+	serv := lib.Server{Db: &db, SlaveJobs: make(map[int32][]string), Jobs: make(map[int32]chan bool), JobIDCounter: 0, Running: make(map[string]int32)}
 	server := grpc.NewServer()
-	main2.RegisterCLIServer(server, &serv)
-
+	pb.RegisterCLIServer(server, &serv)
 	err = server.Serve(lis)
 	if err != nil {
 		panic("Error listening on the given scanner.")
 	}
+	log.Println("Server started.")
 }

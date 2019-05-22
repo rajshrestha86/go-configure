@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+service CLI {
+
+    //    Slave Management
+    rpc AddSlave (Slave) returns (Status);
+    rpc DeleteSlave (Slave) returns (Status);
+    rpc ListSlaves (Empty) returns (stream Slave);
+    rpc DeleteSlaves (Empty) returns (Status);
+
+    //    Config Management.
+    rpc TransferConfigFile (stream File) returns (Status);
+    rpc ReadConfigFile (Empty) returns (stream File);
+    rpc ListConfigurations(Empty) returns (stream Message);
+    rpc RemoveConfigFile(Message) returns (Status);
+
+
+    //    Listening Management.
+    rpc StartListeningFromCsv (stream RunConfiguration) returns (Job); // Done (Remaining to Check)
+    rpc StartListeningSlave (RunConfiguration) returns (Job); // Done
+    rpc ViewAllRunningJobs (Empty) returns (stream Message); // Done
+    rpc StopListeningJob (Job) returns (Status); // Done
+    rpc StopAllRunningJobs (Empty) returns (Status); // Done
+
+    // Output
+    rpc ListOutputKeysForHost (Slave) returns (stream Message);
+    rpc GetRawOutput (OutputId) returns (stream Message);
+    rpc GetMatchedOutput (OutputId) returns (stream Message);
+    rpc DeleteOutput (OutputId) returns (Status);
+    rpc DeleteOutputWithGivenTimestamp (OutputId) returns (Status);
+    rpc DeleteAllOutputOfHost (Slave) returns (Status);
+    //
+
+}
+
+
+message Slave {
+    string username = 1;
+    string host = 2;
+    string password = 3;
+    string id = 4;
+}
+
+message Status {
+    bool status = 1;
+}
+
+message File {
+    bytes data = 1;
+    string name = 2;
+}
+
+message RunConfiguration {
+    string slaveID = 1;
+    string configName = 2;
+}
+
+message Job {
+    int32 id = 1;
+}
+
+message Empty {
+}
+
+message Message {
+    string text = 1;
+}
+
+message OutputId {
+    string id = 1;
+}

@@ -11,33 +11,33 @@ import (
 type SSHCONNECTION struct {
 	Username string
 	Host     string
-	KeyPath  string
+	Password  string
 	Client   *ssh.Client
 	Session  *ssh.Session
 }
 
-func NewConnection(username, host, keypath string) SSHCONNECTION {
+func NewConnection(username, host, password string) SSHCONNECTION {
 	sshconn := SSHCONNECTION{}
 	sshconn.Username = username
 	sshconn.Host = host
-	sshconn.KeyPath = keypath
+	sshconn.Password = password
 	sshconn.Client = nil
 	sshconn.Session = nil
 	return sshconn
 }
 
-func (sshconn *SSHCONNECTION) ConnectRemote() () {
+func (sshconn *SSHCONNECTION) ConnectRemote() error {
 	sshConfig := &ssh.ClientConfig{
 		User:            sshconn.Username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Auth: []ssh.AuthMethod{
-			publickeyfile(sshconn.KeyPath)},
+			ssh.Password(sshconn.Password)},
 	}
 
-	client, err := ssh.Dial("tcp", sshconn.Host+":22", sshConfig)
+	client, err := ssh.Dial("tcp", sshconn.Host, sshConfig)
 	if err != nil {
 		fmt.Println("There is error connecting to the host. ", err)
-		client = nil
+		return err
 	}
 
 	//session, err := client.NewSession()
@@ -48,6 +48,7 @@ func (sshconn *SSHCONNECTION) ConnectRemote() () {
 
 	sshconn.Client = client
 	sshconn.Session = nil
+	return nil
 }
 
 func (sshconn *SSHCONNECTION) executeCommand(command string) ([]byte, error) {
@@ -62,6 +63,7 @@ func (sshconn *SSHCONNECTION) executeCommand(command string) ([]byte, error) {
 		res, err := session.CombinedOutput(command)
 		defer session.Close()
 		if err != nil {
+			fmt.Println("Error executing command.")
 			return nil, errors.New("Error executing command.")
 		}
 		return res, err
